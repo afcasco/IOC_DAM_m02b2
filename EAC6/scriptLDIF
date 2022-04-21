@@ -1,0 +1,53 @@
+#!/bin/bash
+#Script per afegir cotxes
+
+#Si no tenim els parametres necessaris acabem script i avisem usuari
+if [ $# -ne 3 ]
+	then echo "L'script necessita 'marca' 'model' i 'uid' com a parametres" && exit 0;
+fi
+
+#Definim variables, per poder posar marca i model de cotxe
+#demanarem 3 parametres en comptes de 2 (marca, model i uidNumber)
+#Fent servir les seguents variables nomes canviant domini i passwd
+#aquest script ens hauria de servir per qualsevol domini de caracteristiques semblants
+file="temp.ldif"
+marca=$1
+model=$2
+guid=$3
+serverName="DreamCars"
+passwd="afernandez"
+domini="dc=dreamcars,dc=fernandez,dc=home"
+admin="cn=admin,$domini"
+ouCars="ou=cars,$domini"
+
+#Si l'arxiu existeix el borrem directametn sense preguntar
+if [ -f $file ]; then echo "Eliminant arxiu temporal previ..." && rm -rf $file; fi
+
+#Obtenir l'ultim uidNumber, per comprovar que no dupliquem entrades
+lastUIDN=$(ldapsearch -x -b $ouCars -D $admin -w $passwd "uid=*" | awk '/uidNumber:/{print $2}' | sort | tail -n 1)
+
+#Linia per fer maco
+echo "Comprovant dades..."
+
+#Si ja existeix es descarta el passat per parametre i es fa servir el seguent disponible
+if [[ $lastUIDN -ge $guid ]]; then echo "L'uid $guid ja esta en us!"; \
+	echo "Es fara servir el seguent uid disponible: $((lastUIDN+1))" && guid=$((lastUIDN+1)); fi
+
+#Crea l'arxiu temporal i l'emplena amb les dades necessaries
+touch $file
+echo "dn: uid=$marca $model,$ouCars" >> $file
+echo "cn: $marca $model" >> $file
+echo "gidnumber: 501" >> $file
+echo "homedirectory: /dev/null" >> $file
+echo "objectclass: posixAccount" >> $file
+echo "objectclass: account" >> $file
+echo "objectclass: top" >> $file
+echo "uid: $marca $model" >> $file
+echo "uidnumber: $guid" >> $file
+
+#injecta el fitxer temporal al servidor, amb l'opcio -w en minuscula fem que no demani la 
+#contrasenya de manera interactiva, tot i que tenirla en text pla a l'script segurament
+#no sigui molt bona idea
+echo "Afegint..."
+ldapadd -x -w $passwd -D $admin -f $file
+echo "Nova entrada amb uid $guid creada al servidor LDAP $serverName"
