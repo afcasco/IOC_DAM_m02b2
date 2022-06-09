@@ -21,3 +21,7 @@ EOF
 export DEBIAN_FRONTEND=noninteractive
 cat ~/debconf-slapd.conf | debconf-set-selections
 apt install ldap-utils slapd -y
+
+
+install php, move phpldapadmin config file
+php7.4 needed 8.x broken
