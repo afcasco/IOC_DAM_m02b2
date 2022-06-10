@@ -12,11 +12,12 @@
 passwd=afernandez
 
 # A editar con la configuracion que cuadre con tu red de casa (la vm debe estar en modo bridge!)
-ip=192.168.1.120
-gateway=192.168.1.1
-dns=1.1.1.1
-domain=example.com
-orgName="Eaxample com"
+IP=192.168.1.120
+GATEWAY=192.168.1.1
+DNS=1.1.1.1
+LDAP_PASSWORD=afernandez
+ORGANIZATION="M1B2 TEST"
+DOMAIN=m1b2.test.home
 
 ####################################################################################################
 
@@ -40,26 +41,23 @@ else
 fi
 
 # Obtiene interfaz por defecto para usar en configuracion netplan
-interface=$(ip link | awk -F: '$0 !~ "lo|vir|wl|^[^0-9]"{print $2;getline}' | head -1)
+INTERFACE=$(ip link | awk -F: '$0 !~ "lo|vir|wl|^[^0-9]"{print $2;getline}' | head -1)
 
 # Eliminar archivo de configuracion antiguo si lo habia
-file=~/00-installer-config.yaml 
-if [ -f $file ]; then rm $file; fi
+FILE=~/00-installer-config.yaml 
+if [ -f $FILE ]; then rm $file; fi
 
 # Creacion automatica del archivo de configuracion de red
-touch $file
-printf "network:\n  ethernets:\n  $interface:\n    addresses: [$ip/24]\n    gateway4: $gateway\n    nameservers:\n      addresses: [$dns]\n  version: 2" >> $file
+touch $FILE
+printf "network:\n  ethernets:\n  $INTERFACE:\n    addresses: [$IP/24]\n    gateway4: $GATEWAY\n    nameservers:\n      addresses: [$DNS]\n  version: 2" >> $FILE
 
 # Movemos el archivo al directorio correcto (se crea en caso de que no exista)
 # Y aplicamos la configuracion de red
-if ! [ -d /etc/netplan ]; then echo $passwd | mkdir -p /etc/netplan; fi
-mv $file /etc/netplan
+if ! [ -d /etc/netplan ]; then mkdir -p /etc/netplan; fi
+mv $FILE /etc/netplan
 netplan apply
 
 #Crear configuracion para instalacion desatendida de slapd
-LDAP_PASSWORD=afernandez
-ORGANIZATION="M1B2 TEST"
-DOMAIN=m1b2.test.home
 echo "slapd slapd/password2 password ${LDAP_PASSWORD}
 slapd slapd/password1 password ${LDAP_PASSWORD}
 slapd slapd/internal/generated_adminpw password ${LDAP_PASSWORD}
