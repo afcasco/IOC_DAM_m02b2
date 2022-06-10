@@ -16,7 +16,7 @@ ip=192.168.1.120
 gateway=192.168.1.1
 dns=1.1.1.1
 domain=example.com
-baseDN=dc=tu,dc=dominio,dc=aqui
+orgName="Eaxample com"
 
 ####################################################################################################
 
@@ -37,32 +37,41 @@ if ! [ -d /etc/netplan ]; then echo $passwd | sudo -S mkdir -p /etc/netplan; fi
 echo $passwd | sudo -S mv $file /etc/netplan
 echo $passwd | sudo -S netplan apply
 
-#Actualizamos repos y el sistema que siempre va bine :)
+#Actualizamos repos y el sistema que siempre va bien :)
 echo $passwd | sudo -S apt update && sudo -S apt upgrade
 
-#Crear debconf para instalacion desatendida de slapd
-touch ~/debconf-slapd.conf
-echo "slapd	slapd/internal/adminpw	password" >> ~/debconf-slapd
-echo "slapd	slapd/password2	password" >> ~/debconf-slapd
-echo "slapd	slapd/password1	password" >> ~/debconf-slapd
-echo " slapd	slapd/internal/generated_adminpw	password" >> ~/debconf-slapd
-# Do you want the database to be removed when slapd is purged?
-echo "slapd	slapd/purge_database	boolean	false" >> ~/debconf-slapd
-echo "slapd	slapd/dump_database	select	when needed" >> ~/debconf-slapd
-echo "slapd	slapd/invalid_config	boolean	true" >> ~/debconf-slapd
-echo "slapd	slapd/upgrade_slapcat_failure	error" >> ~/debconf-slapd
-echo "slapd	slapd/domain	string	eu-west-3.compute.internal" >> ~/debconf-slapd
-echo "slapd	slapd/ppolicy_schema_needs_update	select	abort installation" >> ~/debconf-slapd
-# Potentially unsafe slapd access control configuration
-echo "slapd	slapd/unsafe_selfwrite_acl	note" >> ~/debconf-slapd
-echo "slapd	slapd/move_old_database	boolean	true" >> ~/debconf-slapd
-ehco "slapd	slapd/password_mismatch	note" >> ~/debconf-slapd
-echo "slapd	shared/organization	string	eu-west-3.compute.internal" >> ~/debconf-slapd
-echo "slapd	slapd/dump_database_destdir	string	/var/backups/slapd-VERSION" >> ~/debconf-slapd
-echo "slapd	slapd/no_configuration	boolean	false" >> ~/debconf-slapd
+#Crear archivo de configuracion para instalacion desatendida de slapd
 export DEBIAN_FRONTEND=noninteractive
-cat ~/debconf-slapd.conf | debconf-set-selections
-apt install ldap-utils slapd -y
+echo -e "
+slapd	slapd/internal/adminpw	password	$passwd
+slapd	slapd/password2	password	$passwd
+slapd	slapd/password1	password	$passwd
+slapd	slapd/internal/generated_adminpw	password	$passwd
+slapd	slapd/purge_database	boolean	false
+slapd	slapd/dump_database	select	when needed
+slapd	slapd/invalid_config	boolean	true
+slapd	slapd/upgrade_slapcat_failure	error	
+slapd	slapd/domain	string	$domain
+slapd	slapd/ppolicy_schema_needs_update	select	abort installation
+slapd	slapd/unsafe_selfwrite_acl	note	
+slapd	slapd/move_old_database	boolean	true
+slapd	slapd/password_mismatch	note	
+slapd	shared/organization	string	$orgName
+slapd	slapd/dump_database_destdir	string	/var/backups/slapd-VERSION
+slapd	slapd/no_configuration	boolean	false" | debconf-set-selections
+apt-get -y install slapd ldap-utils
+
+
+
+
+echo -e " 
+slapd    slapd/internal/generated_adminpw    password   openstack
+slapd    slapd/password2    password    openstack
+slapd    slapd/internal/adminpw    password openstack
+slapd    slapd/password1    password    openstack
+" | sudo debconf-set-selections
+
+sudo apt-get install -y slapd ldap-utils
 
 # modificar /etc/ldap/ldap.conf
 # BASE	dc=dragon,dc=lab
