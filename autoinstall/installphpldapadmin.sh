@@ -2,19 +2,20 @@
 
 ####################################################################################################
 
-# Script para la autoinstalacion de phpldapadmin y todos sus requisitos
+# Script para la autoinstalacion de slapd phpldapadmin y todos sus requisitos
 
 ####################################################################################################
 
 # CAMBIAR SOLO DATOS DE LINEAS 12, 15, 16 Y 17
 
-# Password para comandos que usan sudo
+# Password para ldap y comandos que usan sudo 
 passwd=afernandez
 
-# A editar con la configuracion que cuadre con tu red de casa
+# A editar con la configuracion que cuadre con tu red de casa (la vm debe estar en modo bridge!)
 ip=192.168.1.120
 gateway=192.168.1.1
 dns=1.1.1.1
+domain=example.com
 
 ####################################################################################################
 
