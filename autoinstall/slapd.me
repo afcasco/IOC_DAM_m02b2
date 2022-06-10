@@ -1,10 +1,10 @@
 #!/bin/bash
 
-####################################################################################################
+#####################################################################################################
 
-# Script para la autoinstalacion de slapd phpldapadmin y todos sus requisitos
+# Script para la autoinstalacion de slapd phpldapadmin y todos sus requisitos en ubuntu 20.04 y 22.04
 
-####################################################################################################
+#####################################################################################################
 
 # CAMBIAR SOLO DATOS DE LINEAS 12, 15, 16 Y 17
 
@@ -19,6 +19,19 @@ domain=example.com
 orgName="Eaxample com"
 
 ####################################################################################################
+
+# First check for compatible ubuntu version
+UBUNTU_VERSION=$(lsb_release -rs)
+if [ $UBUNTU_VERSION == "20.04" ]; then 
+       echo "Focal Fossa"
+elif [ $UBUNTU_VERSION == "22.04" ]; then 
+       echo "Jammy Jellyfish"
+else
+	echo "Version incompatible, saliendo... :("
+	exit 0;
+fi
+
+
 
 # Obtiene interfaz por defecto para usar en configuracion netplan
 interface=$(ip link | awk -F: '$0 !~ "lo|vir|wl|^[^0-9]"{print $2;getline}' | head -1)
