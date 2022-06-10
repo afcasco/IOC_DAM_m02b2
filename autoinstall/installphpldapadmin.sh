@@ -38,8 +38,8 @@ echo $passwd | sudo -S netplan apply
 #Actualizamos repos y el sistema que siempre va bine :)
 echo $passwd | sudo -S apt update && sudo -S apt upgrade
 
-#Crear debconf parta instalacion desatendida de slapd
-touch ~/debconf-slapd
+#Crear debconf para instalacion desatendida de slapd
+touch ~/debconf-slapd.conf
 echo "slapd	slapd/internal/adminpw	password" >> ~/debconf-slapd
 echo "slapd	slapd/password2	password" >> ~/debconf-slapd
 echo "slapd	slapd/password1	password" >> ~/debconf-slapd
@@ -62,23 +62,32 @@ export DEBIAN_FRONTEND=noninteractive
 cat ~/debconf-slapd.conf | debconf-set-selections
 apt install ldap-utils slapd -y
 
+# modificar /etc/ldap/ldap.conf
+# BASE	dc=dragon,dc=lab
+#URI	ldap://ldap.dragon.lab
 
 
+#instalar phpldapadmin clonando del repositorio de github
+git clone https://github.com/leenooks/phpLDAPadmin.git
+
+# falta pasar variable de configuracion para no tener que editar el config.php
+
+# // $servers->setValue('server','host','127.0.0.1'); -> $servers->setValue('server','host','SERVER_IP');
+# $servers->setValue('server','base',array()); -> $servers->setValue('server','base',array('dc=example,dc=com));
+# //$servers->setValue('server','tls',false); -> $servers->setValue('server','tls',false);
+# //$servers->setValue('login','anon_bind',true); -> $servers->setValue('login','anon_bind',false);
 
 
-
+mv ./phpLDAPadmin /var/www/html/phpldapadmin
 
 #for php7.4 installation
 echo $passwd | sudo apt install software-properties-common apt-transport-https -y
 echo $passwd | sudo add-apt-repository ppa:ondrej/php -y
 echo $passwd | sudo -S apt update && sudo -S apt upgrade
-echo $passwd | sudo apt install php7.4 php7.4-common libapache2-mod-php7.4 php7.4-cli php-xml
-echo $passwd | sudo -S apt install -y mysql-server mysql-client apache2 php7.4 libapache2-mod-php7.4 php7.4-mysql php7.4-ldap php7.4-xml php7.4-opcache php7.4-apcu
+echo $passwd | sudo apt install php7.4 php7.4-common libapache2-mod-php7.4
 
 
+#copiar archivo de ejemplo de configuracion de phpldapadmin a config.php
+# esto hay que conseguir que no haga falta
+#echo $passwd | sudo -S cp /var/www/html/phpldapadmin/config/config.php.example /var/www/html/phpldapadmin/config/config.php
 
-echo $passwd | sudo -S cp /var/www/html/phpldapadmin/config/config.php.example /var/www/html/phpldapadmin/config/config.php
-
-#php-ldap
-
-#mysql-server mysql-client
