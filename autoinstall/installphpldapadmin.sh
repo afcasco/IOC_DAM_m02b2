@@ -38,6 +38,35 @@ echo $passwd | sudo -S netplan apply
 #Actualizamos repos y el sistema que siempre va bine :)
 echo $passwd | sudo -S apt update && sudo -S apt upgrade
 
+#Crear debconf parta instalacion desatendida de slapd
+touch ~/debconf-slapd
+echo "slapd	slapd/internal/adminpw	password" >> ~/debconf-slapd
+echo "slapd	slapd/password2	password" >> ~/debconf-slapd
+echo "slapd	slapd/password1	password" >> ~/debconf-slapd
+echo " slapd	slapd/internal/generated_adminpw	password" >> ~/debconf-slapd
+# Do you want the database to be removed when slapd is purged?
+echo "slapd	slapd/purge_database	boolean	false" >> ~/debconf-slapd
+echo "slapd	slapd/dump_database	select	when needed" >> ~/debconf-slapd
+echo "slapd	slapd/invalid_config	boolean	true" >> ~/debconf-slapd
+echo "slapd	slapd/upgrade_slapcat_failure	error" >> ~/debconf-slapd
+echo "slapd	slapd/domain	string	eu-west-3.compute.internal" >> ~/debconf-slapd
+echo "slapd	slapd/ppolicy_schema_needs_update	select	abort installation" >> ~/debconf-slapd
+# Potentially unsafe slapd access control configuration
+echo "slapd	slapd/unsafe_selfwrite_acl	note" >> ~/debconf-slapd
+echo "slapd	slapd/move_old_database	boolean	true" >> ~/debconf-slapd
+ehco "slapd	slapd/password_mismatch	note" >> ~/debconf-slapd
+echo "slapd	shared/organization	string	eu-west-3.compute.internal" >> ~/debconf-slapd
+echo "slapd	slapd/dump_database_destdir	string	/var/backups/slapd-VERSION" >> ~/debconf-slapd
+echo "slapd	slapd/no_configuration	boolean	false" >> ~/debconf-slapd
+export DEBIAN_FRONTEND=noninteractive
+cat ~/debconf-slapd.conf | debconf-set-selections
+apt install ldap-utils slapd -y
+
+
+
+
+
+
 
 #for php7.4 installation
 echo $passwd | sudo apt install software-properties-common apt-transport-https -y
@@ -46,7 +75,7 @@ echo $passwd | sudo -S apt update && sudo -S apt upgrade
 echo $passwd | sudo apt install php7.4 php7.4-common libapache2-mod-php7.4 php7.4-cli php-xml
 echo $passwd | sudo -S apt install -y mysql-server mysql-client apache2 php7.4 libapache2-mod-php7.4 php7.4-mysql php7.4-ldap php7.4-xml php7.4-opcache php7.4-apcu
 
-#echo $passwd | sudo -S apt install -y slapd ldap-utils
+
 
 echo $passwd | sudo -S cp /var/www/html/phpldapadmin/config/config.php.example /var/www/html/phpldapadmin/config/config.php
 
