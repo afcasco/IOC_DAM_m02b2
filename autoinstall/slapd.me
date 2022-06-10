@@ -21,6 +21,8 @@ DOMAIN=m1b2.test.home
 
 ####################################################################################################
 
+# falta redirigir output a null (> /dev/null 2>&1) y crear mensajes info personalizados
+
 # First check for compatible ubuntu version
 UBUNTU_VERSION=$(lsb_release -rs)
 if [ $UBUNTU_VERSION == "20.04" ]; then 
